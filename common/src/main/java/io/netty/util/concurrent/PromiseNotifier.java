@@ -15,16 +15,19 @@
  */
 package io.netty.util.concurrent;
 
+import static io.netty.util.internal.ObjectUtil.checkNotNull;
+
 /**
  * {@link GenericFutureListener} implementation which takes other {@link Future}s
  * and notifies them on completion.
  *
- * @param V the type of value returned by the future
- * @param F the type of future
+ * @param <V> the type of value returned by the future
+ * @param <F> the type of future
  */
 public class PromiseNotifier<V, F extends Future<V>> implements GenericFutureListener<F> {
 
     private final Promise<? super V>[] promises;
+    private final boolean tryNotify;
 
     /**
      * Create a new instance.
@@ -33,31 +36,70 @@ public class PromiseNotifier<V, F extends Future<V>> implements GenericFutureLis
      */
     @SafeVarargs
     public PromiseNotifier(Promise<? super V>... promises) {
-        if (promises == null) {
-            throw new NullPointerException("promises");
-        }
+        this(false, promises);
+    }
+
+    /**
+     * Create a new instance.
+     *
+     * @param tryNotify if {@code true} {@link Promise#trySuccess(Object)} and
+     *                  {@link Promise#tryFailure(Throwable)} will be used, if {@code false}
+     *                  {@link Promise#setSuccess(Object)} amd {@link Promise#setFailure(Throwable)}.
+     * @param promises  the {@link Promise}s to notify once this {@link GenericFutureListener} is notified.
+     */
+    @SafeVarargs
+    public PromiseNotifier(boolean tryNotify, Promise<? super V>... promises) {
+        checkNotNull(promises, "promises");
         for (Promise<? super V> promise: promises) {
             if (promise == null) {
                 throw new IllegalArgumentException("promises contains null Promise");
             }
         }
         this.promises = promises.clone();
+        this.tryNotify = tryNotify;
     }
 
     @Override
     public void operationComplete(F future) throws Exception {
         if (future.isSuccess()) {
             V result = future.get();
-            for (Promise<? super V> p: promises) {
-                p.setSuccess(result);
+            if (tryNotify) {
+                trySuccess(result);
+            } else {
+                setSuccess(result);
             }
             return;
         }
 
         Throwable cause = future.cause();
+        if (tryNotify) {
+            tryFailure(cause);
+        } else {
+            setFailure(cause);
+        }
+    }
+
+    private void trySuccess(V result) {
+        for (Promise<? super V> p: promises) {
+            p.trySuccess(result);
+        }
+    }
+
+    private void setSuccess(V result) {
+        for (Promise<? super V> p: promises) {
+            p.setSuccess(result);
+        }
+    }
+
+    private void tryFailure(Throwable cause) {
+        for (Promise<? super V> p: promises) {
+            p.tryFailure(cause);
+        }
+    }
+
+    private void setFailure(Throwable cause) {
         for (Promise<? super V> p: promises) {
             p.setFailure(cause);
         }
     }
-
 }

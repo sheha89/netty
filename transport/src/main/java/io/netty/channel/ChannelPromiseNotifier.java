@@ -33,4 +33,15 @@ public final class ChannelPromiseNotifier
         super(promises);
     }
 
+    /**
+     * Create a new instance
+     *
+     * @param tryNotify if {@code true} {@link ChannelPromise#trySuccess()} and
+     *                  {@link ChannelPromise#tryFailure(Throwable)} will be used, if {@code false}
+     *                  {@link ChannelPromise#setSuccess()} amd {@link ChannelPromise#setFailure(Throwable)}.
+     * @param promises  the {@link ChannelPromise}s to notify once this {@link ChannelFutureListener} is notified.
+     */
+    public ChannelPromiseNotifier(boolean tryNotify, ChannelPromise... promises) {
+        super(tryNotify, promises);
+    }
 }
