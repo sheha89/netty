@@ -1014,6 +1014,7 @@ public class SslHandler extends ByteToMessageDecoder implements ChannelOutboundH
                     // notify about the CLOSED state of the SSLEngine. See #137
                     notifyClosure = true;
                 }
+                System.out.println("UNWRAP " + ctx.channel().parent() + " handshakeStatus=" + handshakeStatus);
 
                 switch (handshakeStatus) {
                     case NEED_UNWRAP:

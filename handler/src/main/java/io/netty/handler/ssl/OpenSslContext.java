@@ -26,6 +26,7 @@ import org.apache.tomcat.jni.SSLContext;
 
 import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLException;
+import javax.net.ssl.SSLHandshakeException;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509ExtendedTrustManager;
 import javax.net.ssl.X509TrustManager;
@@ -53,6 +54,7 @@ public abstract class OpenSslContext extends SslContext {
     private final long aprPool;
     @SuppressWarnings({ "unused", "FieldMayBeFinal" })
     private volatile int aprPoolDestroyed;
+    private volatile boolean rejectRemoteInitiatedRenegation;
     private final List<String> unmodifiableCiphers;
     private final long sessionCacheSize;
     private final long sessionTimeout;
@@ -278,7 +280,8 @@ public abstract class OpenSslContext extends SslContext {
     @Override
     public final SSLEngine newEngine(ByteBufAllocator alloc) {
         OpenSslEngineMap engineMap = engineMap();
-        final OpenSslEngine engine = new OpenSslEngine(ctx, alloc, isClient(), sessionContext(), apn, engineMap);
+        final OpenSslEngine engine = new OpenSslEngine(
+                ctx, alloc, isClient(), sessionContext(), apn, engineMap, rejectRemoteInitiatedRenegation);
         engineMap.add(engine);
         return engine;
     }
@@ -299,6 +302,14 @@ public abstract class OpenSslContext extends SslContext {
     @Deprecated
     public final OpenSslSessionStats stats() {
         return sessionContext().stats();
+    }
+
+    /**
+     * Specify if remote initiated renegation is supported or not. If not supported and the remote side tries
+     * to initiate a renegation a {@link SSLHandshakeException} will be thrown during decoding.
+     */
+    public void setRejectRemoteInitiatedRenegation(boolean rejectRemoteInitiatedRenegation) {
+        this.rejectRemoteInitiatedRenegation = rejectRemoteInitiatedRenegation;
     }
 
     @Override

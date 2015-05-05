@@ -594,7 +594,8 @@
       -XX:+HeapDumpOnOutOfMemoryError
     </argLine.common>
     <!-- Default to ALPN. Then classpath is used to refine selection. See forcenpn profile to force NPN -->
-    <argLine.bootcp>-Xbootclasspath/p:${jetty.alpn.path}</argLine.bootcp>
+    <!--<argLine.bootcp>-Xbootclasspath/p:${jetty.alpn.path}</argLine.bootcp>-->
+    <argLine.bootcp></argLine.bootcp>
     <argLine.leak>-verbose:gc</argLine.leak> <!-- Overridden when 'leak' profile is active -->
     <argLine.coverage>-D_</argLine.coverage> <!-- Overridden when 'coverage' profile is active -->
   </properties>
@@ -671,7 +672,7 @@
       <dependency>
         <groupId>${project.groupId}</groupId>
         <artifactId>netty-tcnative</artifactId>
-        <version>1.1.33.Fork1</version>
+        <version>1.1.33.Fork2-SNAPSHOT</version>
         <classifier>${os.detected.classifier}</classifier>
         <scope>compile</scope>
         <optional>true</optional>
