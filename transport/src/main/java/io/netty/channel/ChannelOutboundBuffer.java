@@ -186,13 +186,13 @@ public final class ChannelOutboundBuffer {
         decrementPendingOutboundBytes(size, true, true);
     }
 
-    private void decrementPendingOutboundBytes(long size, boolean invokeLater, boolean notify) {
+    private void decrementPendingOutboundBytes(long size, boolean invokeLater, boolean notifyWritability) {
         if (size == 0) {
             return;
         }
 
         long newWriteBufferSize = TOTAL_PENDING_SIZE_UPDATER.addAndGet(this, -size);
-        if (notify && newWriteBufferSize == 0 || newWriteBufferSize <= channel.config().getWriteBufferLowWaterMark()) {
+        if (notifyWritability && newWriteBufferSize == 0 || newWriteBufferSize <= channel.config().getWriteBufferLowWaterMark()) {
             setWritable(invokeLater);
         }
     }
@@ -275,7 +275,7 @@ public final class ChannelOutboundBuffer {
         return remove0(cause, true);
     }
 
-    private boolean remove0(Throwable cause, boolean notify) {
+    private boolean remove0(Throwable cause, boolean notifyWritability) {
         Entry e = flushedEntry;
         if (e == null) {
             return false;
@@ -292,7 +292,7 @@ public final class ChannelOutboundBuffer {
             ReferenceCountUtil.safeRelease(msg);
 
             safeFail(promise, cause);
-            decrementPendingOutboundBytes(size, false, notify);
+            decrementPendingOutboundBytes(size, false, notifyWritability);
         }
 
         // recycle the entry

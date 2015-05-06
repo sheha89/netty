@@ -748,7 +748,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
                     if (isOpen()) {
                         outboundBuffer.failFlushed(NOT_YET_CONNECTED_EXCEPTION, true);
                     } else {
-                        // Not notify as the channel is closed already.
+                        // Do not trigger channelWritabilityChanged because the channel is closed already.
                         outboundBuffer.failFlushed(CLOSED_CHANNEL_EXCEPTION, false);
                     }
                 } finally {
@@ -761,7 +761,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
                 doWrite(outboundBuffer);
             } catch (Throwable t) {
                 boolean close = t instanceof IOException && config().isAutoClose();
-                // We not want to notify for pendingWritableBytes updates if we close the channel anyway.
+                // We do not want to trigger channelWritabilityChanged event if the channel is going to be closed.
                 outboundBuffer.failFlushed(t, !close);
                 if (close) {
                     close(voidPromise());
